@@ -3,8 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../interceptors/token_interceptor.dart';
 
+// ApiServices ใช้สำหรับติดต่อกับ API
+// โดยใช้ Dio package เพื่อส่งคำขอ HTTP (เช่น GET, POST, PUT, DELETE) ไปยัง API ที่กำหนดไว้ใน BaseOptions
 class ApiServices {
   final Dio _dio = Dio(
+    // ตั้งค่าพื้นฐานให้ใช้ baseUrl และ headers สำหรับทุกการเรียก HTTP
     BaseOptions(
       baseUrl: "https://todo-api.staging.codehard.co.th/api",
       headers: {
@@ -14,6 +17,8 @@ class ApiServices {
     ),
   );
 
+  // TokenInterceptor: ใช้เพื่อจัดการกับ token
+  // โดยจะแทรก token ใน header ของคำขอ HTTP
   final TokenInterceptor _tokenInterceptor = TokenInterceptor();
 
   ApiServices() {
@@ -22,6 +27,8 @@ class ApiServices {
     _initializeToken();
   }
 
+  // _initialzeToken(): ใช้ในการโหลด token จาก SharedPreferences เมื่อแอปเริ่มทำงาน
+  // ถ้ามี token เก็บอยู่ก็จะเรียกใช้ setAuthToken เพื่อกำหนด token ให้กับ TokenInterceptor
   Future<void> _initializeToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("auth_token");
@@ -31,6 +38,7 @@ class ApiServices {
     }
   }
 
+  // setAuthToken: กำหนด token ให้กับ TokenInterceptor
   void setAuthToken(String? token) async {
     _tokenInterceptor.setToken(token);
 
@@ -54,6 +62,7 @@ class ApiServices {
         "username": username,
         "password": password,
       },
+      // กำหนดว่าไม่ต้องแนบ token สำหรับคำขอนี้
       options: Options(extra: {"requiresToken": false}),
     );
   }

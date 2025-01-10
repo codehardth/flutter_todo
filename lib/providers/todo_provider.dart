@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 import '../models/todo_model.dart';
 import '../services/api_services.dart';
 
+// TodoProvider ใช้จัดการข้อมูล todo
+//    - การดึงข้อมูลรายการงานทั้งหมด, 
+//    - การดึงข้อมูลงานตาม ID,
+//    - การสร้าง
+//    - การแก้ไข
+// รวมถึงการแจ้งการเปลี่ยนแปลงไปยัง UI โดยใช้ notifyListeners()
+// ซึ่งเป็นฟีเจอร์หลักของ Provider สำหรับการอัปเดต UI เมื่อข้อมูลมีการเปลี่ยนแปลง
 class TodoProvider with ChangeNotifier {
   final _apiService = ApiServices();
 
@@ -19,6 +26,7 @@ class TodoProvider with ChangeNotifier {
       return;
     }
 
+    // หากการดึงข้อมูลสำเร็จ, จะทำการแปลง JSON เป็นออบเจ็กต์ List<TodoModel> และส่งคืน
     _todos =
         (res.data as List).map((item) => TodoModel.fromJson(item)).toList();
 
@@ -34,6 +42,7 @@ class TodoProvider with ChangeNotifier {
       return null;
     }
 
+    // หากการดึงข้อมูลสำเร็จ, จะทำการแปลง JSON เป็นออบเจ็กต์ TodoModel และส่งคืน
     return TodoModel.fromJson(res.data);
   }
 
@@ -54,6 +63,7 @@ class TodoProvider with ChangeNotifier {
       return null;
     }
 
+    // หากสร้าง todo สำเร็จ, จะส่งคืน id ใหม่ที่สร้าง
     return res.data['id'];
   }
 

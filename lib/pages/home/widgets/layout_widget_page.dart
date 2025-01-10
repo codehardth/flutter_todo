@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
+// สร้างหน้าจอ Flutter ที่แสดงผลธงชาติของประเทศไทย, สวีเดน, และญี่ปุ่น
+// โดยใช้ Widget หลักในการออกแบบ ได้แก่ Column, Container, Row, Stack และ Padding
+// รวมถึงการใช้ Custom Widget เพื่อแยกส่วนประกอบของแต่ละธงชาติ
 class LayoutWidgetPage extends StatelessWidget {
   const LayoutWidgetPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const spacer = SizedBox(height: 20);
+    // สร้าง spacerWidger เพื่อกำหนดระยะห่างระหว่าง Widget ด้วย Sizebox ขนาดสูง 20
+    const spacerWidget = SizedBox(height: 20);
 
+    // ใช้ SingleChildScrollView เพื่อให้หน้าจอเลื่อนดูได้ในกรณีที่เนื้อหาเกินขนาดหน้าจอ
     return SingleChildScrollView(
       child: Container(
         color: Colors.black,
@@ -15,9 +20,9 @@ class LayoutWidgetPage extends StatelessWidget {
           child: Column(
             children: [
               ThailandFlagWidget(),
-              spacer,
+              spacerWidget,
               SwedenFlagWidget(),
-              spacer,
+              spacerWidget,
               JapanFlagWidget(),
             ],
           ),
@@ -27,6 +32,7 @@ class LayoutWidgetPage extends StatelessWidget {
   }
 }
 
+// widget สำหรับสร้างคำอธิบายเหนือธงขาติ โดยรับค่า String description มาแสดง
 class CodeDescriptionWidget extends StatelessWidget {
   final String description;
   const CodeDescriptionWidget({
@@ -60,7 +66,7 @@ class ThailandFlagWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const CodeDescriptionWidget(
-          description: 'use Column and Container',
+          description: 'วาดธงชาติไทยด้วย Column และ Container',
         ),
         Container(
           color: Colors.red,
@@ -100,7 +106,7 @@ class SwedenFlagWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const CodeDescriptionWidget(
-          description: 'use Column, Container and Row',
+          description: 'วาดธงชาติสวีเดนด้วยการใช้ Column, Row, และ Container เพื่อสร้างแถบสีฟ้าและสีเหลือง',
         ),
         blueAndYellow(yellowWidth),
         Container(
@@ -112,6 +118,7 @@ class SwedenFlagWidget extends StatelessWidget {
     );
   }
 
+  // ฟังก์ชัน blueAndYellow สร้าง Container เพื่อช่วยลดความซ้ำซ้อนในการสร้างส่วนแถบสีสีน้ำเงินและเหลือง
   Container blueAndYellow(double yellowWidth) {
     return Container(
         height: 80,
@@ -142,7 +149,7 @@ class JapanFlagWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const CodeDescriptionWidget(
-          description: 'use Stack and Container (with BoxDecoration)',
+          description: 'วาดธงชาติญี่ปุ่นด้วย Stack และ Container (พร้อม BoxDecoration)',
         ),
         Stack(
           children: [
