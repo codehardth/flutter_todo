@@ -1,3 +1,4 @@
+// constant สำหรับเก็บค่าระดับความสำคัญของ todo task
 class ToDoPriority {
   const ToDoPriority._();
 
@@ -12,6 +13,7 @@ class ToDoPriority {
   ];
 }
 
+// constant สำหรับเก็บสถานะของ todo task
 class ToDoStatus {
   const ToDoStatus._();
 
@@ -49,6 +51,8 @@ class TodoModel {
     this.updatedAt,
   });
 
+  // Factory constructor สำหรับแปลง JSON เป็นออบเจ็กต์ของ TodoModel (Object) โดยการ แมปข้อมูล (map data) จาก JSON แต่ละฟิลด์ให้เข้ากับพารามิเตอร์ของ TodoModel
+  // ถูกเรียกใช้เมื่อต้องการแมปข้อมูลจาก API มาเป็น TodoModel ที่ใช้ภายใน Application
   factory TodoModel.fromJson(Map<String, dynamic> json) {
     return TodoModel(
       id: json['id'],

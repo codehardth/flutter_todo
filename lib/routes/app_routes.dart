@@ -1,3 +1,4 @@
+// constant class ของชื่อ page route
 class AppRoutes {
   const AppRoutes._();
 
