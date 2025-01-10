@@ -58,7 +58,7 @@ class TodoFormDialogWidgetState extends State<TodoFormDialogWidget> {
     final title = widget.isEdit ? const Text('Edit') : const Text('Add');
     final titleIcon = widget.isEdit ? Icons.edit : Icons.add;
 
-    final spacer = const SizedBox(height: 15);
+    const spacer = SizedBox(height: 15);
 
     return AlertDialog(
       title: Row(
