@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../models/todo_model.dart';
 import '../../../../providers/todo_provider.dart';
+import 'dialogs/todo_form_dialog_widget.dart';
 
 // StatefulWidget สำหรับรายการ To-Do List โดยดึงข้อมูลจาก TodoProvider
 // ใช้แพ็คเกจต่าง ๆ เช่น
@@ -37,14 +38,34 @@ class _TodoListPageState extends State<TodoListPage> {
     // if (mounted): ใช้เพื่อให้แน่ใจว่า Widget ยังคงอยู่ใน tree ก่อนที่จะเรียกใช้โค้ดที่เกี่ยวข้องกับการเปลี่ยนแปลง state (setState)
     // เมื่อ Widget ถูกลบออกจาก widget tree (เช่น หน้าจอถูกปิดหรือเปลี่ยนไปหน้าอื่น) ค่าของ mounted จะเปลี่ยนเป็น false
     // หากเราเรียก setState ใน Widget ที่ถูกถอดออกจาก tree แล้ว จะเกิด error "setState() called after dispose()"
-    if (mounted) {
+    if (context.mounted) {
       //🚀🚀🚀***Exercise 1.edit todo with showDialog (isEdit:true)
+      showDialog(
+        context: context,
+        builder: (context) => TodoFormDialogWidget(
+          initialTitle: todo.title,
+          initialPriority: todo.priority,
+          initialStatus: todo.status,
+          initialDueDate: todo.dueDate,
+          onSave: (
+            title,
+            priority,
+            status,
+            dueDate,
+          ) async {
+            await todoProvider.updateTodoAsync(
+              id: todoId,
+              title: title,
+              priority: priority,
+              status: status,
+              dueDate: dueDate,
+            );
 
-      // showDialog(
-      //   context: context,
-      //   builder: (context) => TodoFormDialogWidget(
-      //     initialTitle: todo.title,
-      // ...
+            todoProvider.getListAsync();
+          },
+          isEdit: true,
+        ),
+      );
     }
   }
 
@@ -221,7 +242,7 @@ class _TodoListPageState extends State<TodoListPage> {
                       const SizedBox(height: 5),
                       // ใช้ package intl เพื่อสร้างฟอร์แมตรูปแบบวันที่ เช่น dd-MMM-yyyy
                       Text(
-                          'due date: ${DateFormat('dd-MMM-yyyy').format(todo.dueDate)}'),
+                          'due date: ${DateFormat('dd-MMM-yyyy').format(todo.dueDate.toLocal())}'),
                     ],
                   ),
                 ),
