@@ -5,7 +5,7 @@ import '../models/todo_model.dart';
 import '../services/api_services.dart';
 
 // TodoProvider ใช้จัดการข้อมูล todo
-//    - การดึงข้อมูลรายการงานทั้งหมด, 
+//    - การดึงข้อมูลรายการงานทั้งหมด,
 //    - การดึงข้อมูลงานตาม ID,
 //    - การสร้าง
 //    - การแก้ไข
@@ -89,5 +89,17 @@ class TodoProvider with ChangeNotifier {
     return true;
   }
 
-  void removeTodo(int index) {}
+  Future<bool> deleteTodoByIdAsync({
+    required String todoId,
+  }) async {
+    var res = await _apiService.deleteTodoByIdAsync(todoId: todoId);
+
+    if (res.statusCode != HttpStatus.ok) {
+      // หากลบข้อมูลไม่สำเร็จ, จะคืนค่า false
+      return false;
+    }
+
+    // หากลบข้อมูลสำเร็จ, จะคืนค่า true
+    return true;
+  }
 }

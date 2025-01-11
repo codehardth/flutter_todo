@@ -81,6 +81,16 @@ class _TodoListPageState extends State<TodoListPage> {
     }
   }
 
+  Future<void> deleteTodoByIdAsync({
+    required String todoId,
+  }) async {
+    final todoProvider = context.read<TodoProvider>();
+
+    await todoProvider.deleteTodoByIdAsync(todoId: todoId);
+
+    getListAsync();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -193,6 +203,7 @@ class _TodoListPageState extends State<TodoListPage> {
                     autoClose: true,
                     onPressed: (context) {
                       //🚀🚀🚀***Exercise 2.Remove todo by todoId
+                      deleteTodoByIdAsync(todoId: todo.id);
                     },
                     backgroundColor: Colors.red[300]!,
                     icon: Icons.delete,
