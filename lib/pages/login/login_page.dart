@@ -21,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // เก็บค่า auth_token ที่ใช้ในการยืนยันตัวตนของผู้ใช้
     prefs.setString('auth_token', 'auth_token_result');
+    prefs.setString('username', _usernameController.text);
 
     // หากฟังก์ชันนี้ถูกเรียกในขณะที่หน้าจอยังแสดงอยู่ (ตรวจสอบด้วย mounted) มันจะเปลี่ยนหน้าไปยัง homePage โดยใช้ Navigator.pushReplacementNamed()
     if (mounted) {
@@ -64,13 +65,13 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(labelText: 'Username'),
-                maxLength: 100,
+                maxLength: 15,
                 maxLines: 1,
               ),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
-                maxLength: 100,
+                maxLength: 15,
                 maxLines: 1,
                 obscureText: true,
               ),

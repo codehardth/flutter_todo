@@ -6,6 +6,7 @@ import 'package:todo_app/pages/home/widgets/todo_chart_page.dart';
 import '../../../routes/app_routes.dart';
 import '../../helpers/snackbar_helper.dart';
 import '../../providers/todo_provider.dart';
+import 'widgets/chat_page.dart';
 import 'widgets/dialogs/todo_form_dialog_widget.dart';
 import 'widgets/layout_widget_page.dart';
 import 'widgets/todo_list_page.dart';
@@ -30,6 +31,8 @@ class _HomePageState extends State<HomePage> {
   // รายการของ Widget แต่ละหน้า โดยใช้ keyword "late" คือจะมีการกำหนดค่าในภายหลัง
   late final List<Widget> _pages;
 
+  late String currentUsername = 'unknow-user';
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +45,7 @@ class _HomePageState extends State<HomePage> {
       const TodoListPage(),
       const LayoutWidgetPage(),
       const TodoChartPage(),
-      buildComingSoonPageWidget(icon: Icons.chat),
+      const ChatPage(),
     ];
   }
 
@@ -150,6 +153,10 @@ class _HomePageState extends State<HomePage> {
     if (authToken == null || authToken.isEmpty) {
       logout();
     }
+
+    setState(() {
+      currentUsername = prefs.getString('username') ?? 'unknow-user';
+    });
   }
 
   @override
@@ -160,6 +167,12 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(getTitleByPageIndex()),
         actions: [
+          Row(
+            children: [
+              const Icon(Icons.person),
+              Text(currentUsername),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
