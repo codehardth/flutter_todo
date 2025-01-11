@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../routes/app_routes.dart';
+import '../../helpers/snackbar_helper.dart';
 import '../../providers/todo_provider.dart';
 import 'widgets/dialogs/todo_form_dialog_widget.dart';
 import 'widgets/layout_widget_page.dart';
@@ -89,6 +90,13 @@ class _HomePageState extends State<HomePage> {
             status: status,
             dueDate: dueDate,
           );
+
+          if (context.mounted) {
+            showCustomSnackBar(
+              context: context,
+              message: 'เพิ่มข้อมูลสำเร็จ!',
+            );
+          }
 
           // อัปเดตรายการ To-do หลังการบันทึก
           todoProvider.getListAsync();

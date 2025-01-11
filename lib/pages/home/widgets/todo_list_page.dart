@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../models/todo_model.dart';
 import '../../../../providers/todo_provider.dart';
+import '../../../helpers/snackbar_helper.dart';
 import 'dialogs/todo_form_dialog_widget.dart';
 
 // StatefulWidget สำหรับรายการ To-Do List โดยดึงข้อมูลจาก TodoProvider
@@ -62,6 +63,14 @@ class _TodoListPageState extends State<TodoListPage> {
             );
 
             todoProvider.getListAsync();
+
+            if (context.mounted) {
+              // แสดง Snackbar เพื่อแจ้งเตือนผู้ใช้
+              showCustomSnackBar(
+                context: context,
+                message: 'บันทึกข้อมูลสำเร็จ!',
+              );
+            }
           },
           isEdit: true,
         ),
@@ -82,11 +91,19 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   Future<void> deleteTodoByIdAsync({
+    required BuildContext context,
     required String todoId,
   }) async {
     final todoProvider = context.read<TodoProvider>();
 
     await todoProvider.deleteTodoByIdAsync(todoId: todoId);
+
+    if (context.mounted) {
+      showCustomSnackBar(
+        context: context,
+        message: 'ลบข้อมูลสำเร็จ!',
+      );
+    }
 
     getListAsync();
   }
@@ -203,7 +220,10 @@ class _TodoListPageState extends State<TodoListPage> {
                     autoClose: true,
                     onPressed: (context) {
                       //🚀🚀🚀***Exercise 2.Remove todo by todoId
-                      deleteTodoByIdAsync(todoId: todo.id);
+                      deleteTodoByIdAsync(
+                        context: context,
+                        todoId: todo.id,
+                      );
                     },
                     backgroundColor: Colors.red[300]!,
                     icon: Icons.delete,
