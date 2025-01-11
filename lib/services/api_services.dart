@@ -127,4 +127,10 @@ class ApiServices {
   }) {
     return _dio.get('/Todo/$todoId');
   }
+
+  Future<Response> deleteTodoByIdAsync({
+    required String todoId,
+  }) {
+    return _dio.delete('/Todo/$todoId');
+  }
 }
