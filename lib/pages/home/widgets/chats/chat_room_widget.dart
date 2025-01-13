@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-class ChatRoomWidget extends StatelessWidget {
+class ChatRoomWidget extends StatefulWidget {
   final String chatId;
   final String chatroomName;
   final String username;
@@ -12,6 +13,41 @@ class ChatRoomWidget extends StatelessWidget {
     required this.chatroomName,
     required this.username,
   });
+
+  @override
+  State<ChatRoomWidget> createState() => _ChatRoomWidgetState();
+}
+
+class _ChatRoomWidgetState extends State<ChatRoomWidget> {
+  Future<void> _subscribeToTopic() async {
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic(widget.chatroomName.toLowerCase());
+      print('*** 🟢Subscribed to topic: ${widget.chatroomName.toLowerCase()}');
+    } catch (e) {
+      print('*** 🟢Error subscribing to topic: $e');
+    }
+  }
+
+  Future<void> _unsubscribeFromTopic() async {
+    try {
+      await FirebaseMessaging.instance.unsubscribeFromTopic(widget.chatroomName.toLowerCase());
+      print('*** 🟢Unsubscribed from topic: ${widget.chatroomName.toLowerCase()}');
+    } catch (e) {
+      print('*** 🟢Error unsubscribing from topic: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeToTopic();
+  }
+
+  @override
+  void dispose() {
+    _unsubscribeFromTopic();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +61,7 @@ class ChatRoomWidget extends StatelessWidget {
               color: Colors.red,
             ),
             const SizedBox(width: 5),
-            Text(chatroomName),
+            Text(widget.chatroomName),
           ],
         ),
         actions: [
@@ -33,7 +69,7 @@ class ChatRoomWidget extends StatelessWidget {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: [
-                Text(username),
+                Text(widget.username),
               ],
             ),
           ),
@@ -41,10 +77,10 @@ class ChatRoomWidget extends StatelessWidget {
       ),
       body: Column(
         children: [
-          ChatRoomPanelWidget(chatId: chatId),
+          ChatRoomPanelWidget(chatId: widget.chatId),
           ChatMessageBoxWidget(
-            chatId: chatId,
-            username: username,
+            chatId: widget.chatId,
+            username: widget.username,
           ),
         ],
       ),
@@ -75,7 +111,7 @@ class ChatMessageBoxWidget extends StatelessWidget {
         .collection('messages')
         .add({
       'text': _messageController.text,
-      'senderId': username,
+      'userId': username,
       'timestamp': FieldValue.serverTimestamp(),
     });
 
@@ -144,7 +180,7 @@ class ChatRoomPanelWidget extends StatelessWidget {
               return ListTile(
                 title: Text(message['text']),
                 subtitle: Text(
-                  message['senderId'],
+                  message['userId'],
                   style: const TextStyle(
                     color: Colors.grey,
                   ),

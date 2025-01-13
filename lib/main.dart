@@ -1,13 +1,25 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/todo_provider.dart';
 import 'routes/route.dart';
+import 'services/firebase_notification_service.dart';
+
+// Handler สำหรับ Background Message
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("*** 🟢Background message received: ${message.messageId}");
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // เรียกใช้งาน FirebaseNotificationService
+  FirebaseNotificationService().initialize();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(
     // MultiProvider: ใช้สำหรับให้บริการหลายๆ Provider ในแอปเดียวกัน
