@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/pages/home/widgets/todo_chart_page.dart';
+import 'package:todo_app/pages/home/widgets/web_view_page.dart';
 
 import '../../../routes/app_routes.dart';
 import '../../helpers/snackbar_helper.dart';
@@ -27,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   final int _layoutWidgetPageIndex = 1;
   final int _chartPageIndex = 2;
   final int _chatPageIndex = 3;
+  final int _webViewPageIndex = 4;
 
   // รายการของ Widget แต่ละหน้า โดยใช้ keyword "late" คือจะมีการกำหนดค่าในภายหลัง
   late final List<Widget> _pages;
@@ -46,6 +48,7 @@ class _HomePageState extends State<HomePage> {
       const LayoutWidgetPage(),
       const TodoChartPage(),
       const ChatPage(),
+      const WebViewPage(),
     ];
   }
 
@@ -128,6 +131,10 @@ class _HomePageState extends State<HomePage> {
 
     if (_currentIndex == _chatPageIndex) {
       return 'Chatroom';
+    }
+    
+    if (_currentIndex == _webViewPageIndex) {
+      return 'Web View';
     }
 
     return 'unknow page';
@@ -223,6 +230,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.chat),
             label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.web),
+            label: 'Web',
           ),
         ],
       ),
