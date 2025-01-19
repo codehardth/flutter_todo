@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class ChatRoomWidget extends StatefulWidget {
+import '../../../../services/chat_services.dart';
+
+class ChatRoomWidget extends StatelessWidget {
   final String chatId;
   final String chatroomName;
   final String username;
@@ -13,41 +15,6 @@ class ChatRoomWidget extends StatefulWidget {
     required this.chatroomName,
     required this.username,
   });
-
-  @override
-  State<ChatRoomWidget> createState() => _ChatRoomWidgetState();
-}
-
-class _ChatRoomWidgetState extends State<ChatRoomWidget> {
-  Future<void> _subscribeToTopic() async {
-    try {
-      await FirebaseMessaging.instance.subscribeToTopic(widget.chatroomName.toLowerCase());
-      print('*** 🟢Subscribed to topic: ${widget.chatroomName.toLowerCase()}');
-    } catch (e) {
-      print('*** 🟢Error subscribing to topic: $e');
-    }
-  }
-
-  Future<void> _unsubscribeFromTopic() async {
-    try {
-      await FirebaseMessaging.instance.unsubscribeFromTopic(widget.chatroomName.toLowerCase());
-      print('*** 🟢Unsubscribed from topic: ${widget.chatroomName.toLowerCase()}');
-    } catch (e) {
-      print('*** 🟢Error unsubscribing from topic: $e');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _subscribeToTopic();
-  }
-
-  @override
-  void dispose() {
-    _unsubscribeFromTopic();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +28,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
               color: Colors.red,
             ),
             const SizedBox(width: 5),
-            Text(widget.chatroomName),
+            Text(chatroomName),
           ],
         ),
         actions: [
@@ -69,7 +36,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: [
-                Text(widget.username),
+                Text(username),
               ],
             ),
           ),
@@ -77,10 +44,13 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
       ),
       body: Column(
         children: [
-          ChatRoomPanelWidget(chatId: widget.chatId),
+          ChatRoomPanelWidget(
+            chatRoomId: chatId,
+            username: username,
+          ),
           ChatMessageBoxWidget(
-            chatId: widget.chatId,
-            username: widget.username,
+            chatRoomId: chatId,
+            username: username,
           ),
         ],
       ),
@@ -89,31 +59,27 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
 }
 
 class ChatMessageBoxWidget extends StatelessWidget {
-  final String chatId;
+  final String chatRoomId;
   final String username;
 
   ChatMessageBoxWidget({
     super.key,
-    required this.chatId,
+    required this.chatRoomId,
     required this.username,
   });
 
   final TextEditingController _messageController = TextEditingController();
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) {
-      return;
-    }
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
 
-    FirebaseFirestore.instance
-        .collection('chatrooms')
-        .doc(chatId)
-        .collection('messages')
-        .add({
-      'text': _messageController.text,
-      'userId': username,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    if (text.isEmpty) return;
+
+    await ChatService().sendMessage(
+      chatRoomId,
+      text,
+      username,
+    );
 
     _messageController.clear();
   }
@@ -146,43 +112,203 @@ class ChatMessageBoxWidget extends StatelessWidget {
   }
 }
 
-class ChatRoomPanelWidget extends StatelessWidget {
+class ChatRoomPanelWidget extends StatefulWidget {
   const ChatRoomPanelWidget({
     super.key,
-    required this.chatId,
+    required this.chatRoomId,
+    required this.username,
   });
 
-  final String chatId;
+  final String chatRoomId;
+  final String username;
+
+  @override
+  State<ChatRoomPanelWidget> createState() => _ChatRoomPanelWidgetState();
+}
+
+class _ChatRoomPanelWidgetState extends State<ChatRoomPanelWidget> {
+  final List<DocumentSnapshot> _previousMessages = [];
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  DocumentSnapshot? _lastDocument;
+  final _chatService = ChatService();
+  final ScrollController _scrollController =
+      ScrollController(); // ScrollController
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMessages(); // โหลดข้อความเมื่อเปิดหน้าจอ
+    _scrollController.addListener(_onScroll); // ฟังการเลื่อนหน้าจอ
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose(); // ล้าง ScrollController
+    super.dispose();
+  }
+
+  // ดัก event เมื่อผู้ใช้เลื่อนหน้าจอ
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 50) {
+      // ถ้าเลื่อนมาถึงด้านบนสุด (50 pixels เป็น buffer กันเล็กน้อย)
+
+      _fetchMessages();
+    }
+  }
+
+  Future<void> _fetchMessages() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      // ดึงข้อความเก่า
+      List<DocumentSnapshot> previousMessages =
+          await _chatService.fetchMessages(
+        widget.chatRoomId,
+        lastDocument: _lastDocument,
+      );
+
+      setState(() {
+        if (previousMessages.isNotEmpty) {
+          // เพิ่มข้อความเก่าโดยไม่ซ้ำ
+          _previousMessages.addAll(previousMessages);
+          _lastDocument = previousMessages.last;
+        }
+        _hasMore = previousMessages.length == ChatConstant.paginationSize;
+      });
+    } catch (e) {
+      debugPrint('Error fetching messages: $e');
+    } finally {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('chatrooms')
-            .doc(chatId)
-            .collection('messages')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (!snapshot.hasData) {
-            return const Text('ไม่มีข้อความก่อนหน้า');
+      child: StreamBuilder<List<DocumentSnapshot>>(
+        stream: _chatService.getMessageStream(widget.chatRoomId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: Text('Loading...'),
+            );
           }
 
-          final messages = snapshot.data!.docs;
+          final newMessages = snapshot.data ?? [];
+
+          // รวมข้อความใหม่กับข้อความเก่าโดยไม่ซ้ำ
+          final Set<String> messageIdsExisting =
+              _previousMessages.map((msg) => msg.id).toSet();
+          final List<DocumentSnapshot> allMessages = [
+            ...newMessages.where((msg) => !messageIdsExisting.contains(msg.id)),
+            ..._previousMessages,
+          ];
+
+          if (allMessages.isEmpty) {
+            return const Center(
+              child: Text('ไม่มีข้อความก่อนหน้า'),
+            );
+          }
 
           return ListView.builder(
-            reverse: true,
-            itemCount: messages.length,
+            primary: false,
+            controller: _scrollController, // ใช้ ScrollController
+            reverse: true, // แสดงข้อความจากล่างขึ้นบน
+            itemCount: allMessages.length + (_isLoadingMore ? 1 : 0),
             itemBuilder: (context, index) {
-              final message = messages[index];
+              if (_isLoadingMore && index == allMessages.length) {
+                // แสดง Loading เมื่อกำลังโหลดข้อความเก่า
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Text('Loading...'),
+                  ),
+                );
+              }
 
-              return ListTile(
-                title: Text(message['text']),
-                subtitle: Text(
-                  message['userId'],
-                  style: const TextStyle(
-                    color: Colors.grey,
+              final message = allMessages[index];
+              final sentDate = message[ChatConstant.fieldTimestamp] != null
+                  ? DateFormat('dd-MM-yyyy hh:mm:ss')
+                      .format(
+                          (message[ChatConstant.fieldTimestamp] as Timestamp)
+                              .toDate()
+                              .toLocal())
+                      .toString()
+                  : 'Sending...';
+
+              var messageAlignment = Alignment.centerLeft;
+              var senderAlignment = CrossAxisAlignment.start;
+
+              var messageBoxDecoration = BoxDecoration(
+                color: Colors.green[100],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  topRight: Radius.circular(10),
+                  bottomRight: Radius.circular(10),
+                ),
+              );
+
+              if (widget.username == message[ChatConstant.fieldSenderId]) {
+                messageAlignment = Alignment.centerRight;
+                senderAlignment = CrossAxisAlignment.end;
+
+                messageBoxDecoration = BoxDecoration(
+                  color: Colors.blue[100],
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                  ),
+                );
+              }
+
+              return Align(
+                alignment: messageAlignment,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: senderAlignment,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.6,
+                        ),
+                        child: Container(
+                          decoration: messageBoxDecoration,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(message[ChatConstant.fieldText]),
+                          ),
+                        ),
+                      ),
+                      Visibility(
+                        visible: widget.username !=
+                            message[ChatConstant.fieldSenderId],
+                        child: Text(
+                          '${message[ChatConstant.fieldSenderId]}',
+                          style: const TextStyle(
+                            color: Colors.black45,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        sentDate,
+                        style: const TextStyle(
+                          color: Colors.black45,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
